@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eduskillpath – LaTeX Editor</title>
-    <!-- Font Awesome 6 (free) for crisp icons -->
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- CodeMirror: light, professional LaTeX editing -->
+    <!-- CodeMirror for LaTeX editing -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.css">
     <style>
+        /* RESET & GLOBAL */
         * {
             margin: 0;
             padding: 0;
@@ -27,67 +28,66 @@
             color: #1e293b;
         }
 
-        /* -------------------- TOP BAR (Eduskillpath branded) -------------------- */
+        /* ----- TOP BAR (Eduskillpath branded) ----- */
         .top-bar {
-            background-color: #0f172a;   /* deep navy */
+            background-color: #0f172a;
             color: white;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
-            height: 56px;
+            height: 60px;
             flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             border-bottom: 1px solid #1e293b;
         }
 
         .top-bar-left {
             display: flex;
             align-items: center;
-            gap: 28px;
+            gap: 30px;
         }
 
         .brand {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-weight: 600;
-            font-size: 20px;
-            letter-spacing: -0.01em;
+            font-weight: 700;
+            font-size: 22px;
+            letter-spacing: -0.02em;
             color: white;
         }
 
         .brand i {
-            font-size: 24px;
-            color: #38bdf8; /* fresh blue */
+            font-size: 26px;
+            color: #38bdf8;
         }
 
-        .project-name {
+        .project-badge {
             display: flex;
             align-items: center;
             gap: 8px;
             background-color: #1e293b;
-            padding: 6px 16px;
+            padding: 6px 18px;
             border-radius: 40px;
             font-size: 14px;
             font-weight: 500;
             color: #e2e8f0;
-            max-width: 300px;
+            max-width: 350px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             border: 1px solid #334155;
         }
 
-        .project-name i {
+        .project-badge i {
             color: #38bdf8;
-            font-size: 14px;
         }
 
-        .top-nav {
+        .nav-links {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
         .nav-btn {
@@ -95,7 +95,7 @@
             align-items: center;
             gap: 8px;
             padding: 6px 14px;
-            border-radius: 6px;
+            border-radius: 8px;
             background: transparent;
             border: none;
             color: #cbd5e1;
@@ -118,7 +118,7 @@
         .top-bar-right {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 22px;
         }
 
         .recompile-btn {
@@ -127,13 +127,13 @@
             color: #38bdf8;
             font-weight: 600;
             font-size: 14px;
-            padding: 8px 22px;
+            padding: 8px 24px;
             border-radius: 40px;
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(56,189,248,0.15);
+            box-shadow: 0 4px 12px rgba(56,189,248,0.2);
             transition: all 0.2s;
         }
 
@@ -142,12 +142,12 @@
             border-color: #7dd3fc;
             color: #7dd3fc;
             transform: translateY(-1px);
-            box-shadow: 0 8px 16px rgba(56,189,248,0.25);
+            box-shadow: 0 8px 18px rgba(56,189,248,0.3);
         }
 
         .profile-icon {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             background: linear-gradient(135deg, #2563eb, #38bdf8);
             border-radius: 50%;
             display: flex;
@@ -159,7 +159,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* -------------------- MAIN LAYOUT (three columns) -------------------- */
+        /* ----- MAIN LAYOUT (three columns) ----- */
         .main-layout {
             display: flex;
             flex: 1;
@@ -167,21 +167,20 @@
             background-color: #ffffff;
         }
 
-        /* ----- LEFT SIDEBAR (File tree / Outline) ----- */
+        /* LEFT SIDEBAR */
         .left-sidebar {
             width: 260px;
             background-color: #f8fafc;
             border-right: 1px solid #e2e8f0;
             display: flex;
             flex-direction: column;
-            font-size: 13px;
         }
 
         .sidebar-tabs {
             display: flex;
             border-bottom: 1px solid #e2e8f0;
             background-color: #f1f5f9;
-            padding: 4px;
+            padding: 6px 6px 0;
             gap: 4px;
         }
 
@@ -192,14 +191,14 @@
             font-weight: 600;
             color: #475569;
             cursor: pointer;
-            border-radius: 6px;
+            border-radius: 8px 8px 0 0;
             transition: all 0.1s;
         }
 
         .sidebar-tab.active {
             background-color: white;
             color: #0f172a;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            box-shadow: 0 -2px 6px rgba(0,0,0,0.02);
         }
 
         .sidebar-content {
@@ -260,7 +259,7 @@
             color: #0369a1;
         }
 
-        /* ----- CENTER: CODE EDITOR WITH TABS ----- */
+        /* CENTER EDITOR */
         .center-pane {
             flex: 1;
             display: flex;
@@ -275,7 +274,7 @@
             display: flex;
             align-items: center;
             padding: 0 12px;
-            height: 44px;
+            height: 46px;
             gap: 2px;
         }
 
@@ -292,7 +291,6 @@
             font-weight: 500;
             color: #475569;
             cursor: default;
-            transition: all 0.1s;
         }
 
         .editor-tab.active {
@@ -300,11 +298,6 @@
             border-bottom: 1px solid white;
             margin-bottom: -1px;
             color: #0f172a;
-            box-shadow: 0 -2px 4px rgba(0,0,0,0.02);
-        }
-
-        .editor-tab i {
-            color: #94a3b8;
         }
 
         .editor-tab.active i {
@@ -329,7 +322,7 @@
             border-right: 1px solid #e2e8f0;
         }
 
-        /* ----- RIGHT PANEL: PDF + LOGS ----- */
+        /* RIGHT PANEL (PDF + LOGS) */
         .right-pane {
             width: 400px;
             display: flex;
@@ -338,7 +331,7 @@
         }
 
         .pdf-header {
-            padding: 12px 20px;
+            padding: 14px 20px;
             border-bottom: 1px solid #e2e8f0;
             font-weight: 600;
             color: #0f172a;
@@ -484,21 +477,27 @@
         .ai-suggestion i {
             color: #2563eb;
         }
+
+        /* small status */
+        #compileStatus {
+            margin-left: 8px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
-    <!-- TOP BAR: Eduskillpath branded -->
+    <!-- TOP BAR -->
     <div class="top-bar">
         <div class="top-bar-left">
             <div class="brand">
                 <i class="fa-regular fa-graduation-cap"></i>
                 <span>Eduskillpath</span>
             </div>
-            <div class="project-name">
+            <div class="project-badge">
                 <i class="fa-regular fa-folder-open"></i>
-                <span id="projectNameDisplay">CV of mr saif alam (sales professional)</span>
+                <span id="projectName">CV of mr saif alam (sales professional)</span>
             </div>
-            <div class="top-nav">
+            <div class="nav-links">
                 <button class="nav-btn" id="menuBtn"><i class="fa-regular fa-bars"></i> Menu</button>
                 <button class="nav-btn" id="shareBtn"><i class="fa-regular fa-share-from-square"></i> Share</button>
                 <button class="nav-btn" id="historyBtn"><i class="fa-regular fa-clock"></i> History</button>
@@ -547,7 +546,7 @@
             </div>
         </div>
 
-        <!-- CENTER: CodeMirror Editor -->
+        <!-- CENTER: Code Editor -->
         <div class="center-pane">
             <div class="editor-tabs">
                 <div class="editor-tab active" data-tab="main.tex">
@@ -573,10 +572,11 @@ Sales Professional with 2+ years experience.
             </div>
         </div>
 
-        <!-- RIGHT PANEL: PDF preview + logs -->
+        <!-- RIGHT PANEL: PDF Preview + Logs -->
         <div class="right-pane">
             <div class="pdf-header">
                 <i class="fa-regular fa-file-pdf"></i> PDF Preview
+                <span id="compileStatus"></span>
             </div>
             <div class="pdf-viewer">
                 <div class="pdf-placeholder" id="pdfPlaceholder">
@@ -596,7 +596,7 @@ Sales Professional with 2+ years experience.
                     </div>
                 </div>
                 <div class="logs-content" id="logsContent">
-                    <div class="log-line">Ready to compile.</div>
+                    <div class="log-line">Ready. Press Recompile or Ctrl+S.</div>
                 </div>
                 <div class="raw-logs-link" id="rawLogsToggle">
                     <i class="fa-regular fa-code"></i> Show raw logs
@@ -609,7 +609,7 @@ Sales Professional with 2+ years experience.
         </div>
     </div>
 
-    <!-- CodeMirror and dependencies -->
+    <!-- CodeMirror -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/stex/stex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
@@ -620,7 +620,7 @@ Sales Professional with 2+ years experience.
 
     <script>
         (function() {
-            // Initialize CodeMirror with LaTeX mode
+            // Initialize CodeMirror
             const textarea = document.getElementById('latex-editor');
             const editor = CodeMirror.fromTextArea(textarea, {
                 lineNumbers: true,
@@ -635,7 +635,7 @@ Sales Professional with 2+ years experience.
                 gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
             });
 
-            // DOM references
+            // DOM elements
             const recompileBtn = document.getElementById('recompileBtn');
             const downloadBtn = document.getElementById('downloadBtn');
             const pdfFrame = document.getElementById('pdfFrame');
@@ -644,6 +644,7 @@ Sales Professional with 2+ years experience.
             const errorSpan = document.getElementById('errorCount');
             const warningSpan = document.getElementById('warningCount');
             const infoSpan = document.getElementById('infoCount');
+            const compileStatus = document.getElementById('compileStatus');
             const rawLogsToggle = document.getElementById('rawLogsToggle');
 
             // Sidebar tabs
@@ -652,14 +653,11 @@ Sales Professional with 2+ years experience.
             const sidebarOutline = document.getElementById('sidebarOutline');
             const sidebarFiles = document.getElementById('sidebarFiles');
 
-            // File tree items & editor tabs
+            // File items & editor tabs
             const fileItems = document.querySelectorAll('.file-tree-item');
             const editorTabs = document.querySelectorAll('.editor-tab');
 
-            // Project name (can be changed dynamically)
-            const projectNameSpan = document.getElementById('projectNameDisplay');
-
-            // ---------- Sidebar tab switching ----------
+            // ---- Sidebar tab switching ----
             tabOutline.addEventListener('click', () => {
                 tabOutline.classList.add('active');
                 tabFiles.classList.remove('active');
@@ -673,8 +671,8 @@ Sales Professional with 2+ years experience.
                 sidebarOutline.style.display = 'none';
             });
 
-            // ---------- File switching (simulate) ----------
-            fileItems.forEach((item) => {
+            // ---- File switching simulation ----
+            fileItems.forEach(item => {
                 item.addEventListener('click', function() {
                     fileItems.forEach(f => f.classList.remove('active'));
                     this.classList.add('active');
@@ -683,10 +681,14 @@ Sales Professional with 2+ years experience.
                     // Update active tab
                     editorTabs.forEach(tab => {
                         const tabFile = tab.getAttribute('data-tab');
-                        tab.classList.toggle('active', tabFile === fileName);
+                        if (tabFile === fileName) {
+                            tab.classList.add('active');
+                        } else {
+                            tab.classList.remove('active');
+                        }
                     });
 
-                    // Set editor content based on file (placeholder, in real app you'd fetch)
+                    // Change editor content accordingly (placeholder)
                     if (fileName === 'main.tex') {
                         editor.setValue(`\\documentclass{article}\n\\begin{document}\n\nHello Saif\n\n\\section*{Experience}\n\nSales Professional with 2+ years experience.\n\n\\end{document}`);
                     } else if (fileName === 'resume.text') {
@@ -697,88 +699,87 @@ Sales Professional with 2+ years experience.
                 });
             });
 
-            // ---------- Compile function (integrated with backend) ----------
-            async function compileLatex() {
+            // ---- Compilation function (identical to original working version) ----
+            function compileLatex() {
                 const latexCode = editor.getValue();
-                // Update UI: show compiling
-                logsContent.innerHTML = '<div class="log-line"><i class="fa-regular fa-spinner fa-spin"></i> Compiling...</div>';
+                compileStatus.innerHTML = '⏳ compiling...';
+                logsContent.innerHTML = '<div class="log-line"><i class="fa-regular fa-spinner fa-spin"></i> Sending to server...</div>';
                 errorSpan.innerHTML = '<i class="fa-regular fa-circle-exclamation"></i> 0';
                 warningSpan.innerHTML = '<i class="fa-regular fa-triangle-exclamation"></i> 0';
                 infoSpan.innerHTML = '<i class="fa-regular fa-circle-info"></i> 0';
 
-                try {
-                    const response = await fetch('/compile', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: 'latex=' + encodeURIComponent(latexCode)
+                // Use the exact same fetch as original working code
+                fetch('/compile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'latex=' + encodeURIComponent(latexCode)
+                })
+                .then(response => {
+                    // Always try to read response text (logs or confirmation)
+                    return response.text().then(text => ({ status: response.status, text }));
+                })
+                .then(({ status, text }) => {
+                    // Update logs with server response
+                    logsContent.innerHTML = ''; // clear
+                    const lines = text.split('\n');
+                    let errCount = 0, warnCount = 0;
+                    lines.forEach(line => {
+                        const div = document.createElement('div');
+                        div.className = 'log-line';
+                        const lower = line.toLowerCase();
+                        if (lower.includes('error') || lower.includes('emergency')) {
+                            div.classList.add('error-line');
+                            errCount++;
+                        } else if (lower.includes('warning')) {
+                            warnCount++;
+                        }
+                        div.textContent = line;
+                        logsContent.appendChild(div);
                     });
 
-                    // Always try to read response text (logs or success message)
-                    const responseText = await response.text();
+                    // Update counters
+                    errorSpan.innerHTML = `<i class="fa-regular fa-circle-exclamation"></i> ${errCount}`;
+                    warningSpan.innerHTML = `<i class="fa-regular fa-triangle-exclamation"></i> ${warnCount}`;
 
-                    if (response.ok) {
-                        // Compilation succeeded: PDF should be available
+                    // If status is OK (2xx), assume PDF was generated
+                    if (status >= 200 && status < 300) {
+                        // PDF should be available
                         pdfFrame.src = '/resume.pdf?' + Date.now();
                         pdfFrame.style.display = 'block';
                         pdfPlaceholder.style.display = 'none';
-
-                        // Show success message in logs
-                        logsContent.innerHTML = '<div class="log-line">✓ Compilation successful. PDF updated.</div>';
-                        errorSpan.innerHTML = '<i class="fa-regular fa-circle-check"></i> 0';
-                        // You could parse responseText for actual warnings if your backend returns them
-                        if (responseText.includes('warning')) {
-                            warningSpan.innerHTML = '<i class="fa-regular fa-triangle-exclamation"></i> 1';
-                        }
+                        compileStatus.innerHTML = '✅ compiled';
                     } else {
-                        // Compilation failed: display error logs from server
+                        // Compilation failed, keep placeholder
                         pdfFrame.style.display = 'none';
                         pdfPlaceholder.style.display = 'flex';
-
-                        // Display the response text (which should contain error logs)
-                        logsContent.innerHTML = ''; // clear
-                        const lines = responseText.split('\n');
-                        let errorCount = 0, warningCount = 0;
-                        lines.forEach(line => {
-                            const div = document.createElement('div');
-                            div.className = 'log-line';
-                            if (line.toLowerCase().includes('error') || line.includes('Emergency')) {
-                                div.classList.add('error-line');
-                                errorCount++;
-                            } else if (line.toLowerCase().includes('warning')) {
-                                warningCount++;
-                            }
-                            div.textContent = line;
-                            logsContent.appendChild(div);
-                        });
-                        errorSpan.innerHTML = `<i class="fa-regular fa-circle-exclamation"></i> ${errorCount}`;
-                        warningSpan.innerHTML = `<i class="fa-regular fa-triangle-exclamation"></i> ${warningCount}`;
+                        compileStatus.innerHTML = '❌ failed';
                     }
-                } catch (err) {
+                })
+                .catch(err => {
                     logsContent.innerHTML = `<div class="log-line error-line">Network error: ${err.message}</div>`;
                     errorSpan.innerHTML = '<i class="fa-regular fa-circle-exclamation"></i> 1';
-                }
+                    compileStatus.innerHTML = '⚠️ error';
+                });
             }
 
-            // ---------- Event listeners ----------
+            // ---- Event listeners ----
             recompileBtn.addEventListener('click', compileLatex);
             editor.setOption('extraKeys', {
                 'Ctrl-S': compileLatex,
                 'Cmd-S': compileLatex
             });
 
-            // Download button: trigger PDF download
+            // Download button: open PDF in new tab (forces download if browser supports)
             downloadBtn.addEventListener('click', () => {
-                // Use the current PDF if exists, otherwise fallback
                 window.open('/resume.pdf?' + Date.now(), '_blank');
             });
 
-            // Raw logs toggle (just for UI consistency, you can expand)
+            // Raw logs toggle (for demonstration)
             rawLogsToggle.addEventListener('click', () => {
-                // In a real app, you might show a modal or expand
-                alert('Full raw logs would appear here.');
+                alert('Full raw logs would appear here. Currently showing server response.');
             });
 
-            // On load, try to see if a PDF already exists (optional)
+            // On load, try to see if a PDF already exists
             fetch('/resume.pdf?' + Date.now(), { method: 'HEAD' })
                 .then(res => {
                     if (res.ok) {
@@ -786,6 +787,7 @@ Sales Professional with 2+ years experience.
                         pdfFrame.style.display = 'block';
                         pdfPlaceholder.style.display = 'none';
                         logsContent.innerHTML = '<div class="log-line">Previous PDF loaded.</div>';
+                        compileStatus.innerHTML = '✅ PDF ready';
                     }
                 })
                 .catch(() => {});
