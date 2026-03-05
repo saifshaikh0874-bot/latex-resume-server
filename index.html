@@ -1,10 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-<title>LaTeX Resume Builder</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LaTeX Editor</title>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css">
 
 <style>
 
@@ -18,72 +26,110 @@ flex-direction:column;
 
 /* TOP BAR */
 
-#topbar{
-background:#1f2937;
+.topbar{
+background:#1e3a5f;
 color:white;
-padding:10px;
+padding:10px 20px;
 display:flex;
+justify-content:space-between;
 align-items:center;
-gap:20px;
 }
 
-#topbar button{
-background:#22c55e;
+.title{
+font-weight:bold;
+font-size:18px;
+}
+
+.actions button{
+margin-left:10px;
+padding:7px 16px;
 border:none;
-padding:8px 15px;
-color:white;
+border-radius:20px;
 cursor:pointer;
+font-weight:bold;
+}
+
+.compile{
+background:#28a47e;
+color:white;
+}
+
+.download{
+background:#3498db;
+color:white;
 }
 
 /* MAIN LAYOUT */
 
-#container{
+.container{
 flex:1;
 display:flex;
+overflow:hidden;
 }
 
-/* FILE TREE */
+/* LEFT FILE TREE */
 
-#filetree{
-width:200px;
-background:#111827;
-color:white;
-padding:10px;
+.sidebar{
+width:220px;
+background:#f5f7fa;
+border-right:1px solid #ddd;
+padding:15px;
+}
+
+.file{
+padding:6px;
+cursor:pointer;
+border-radius:4px;
+}
+
+.file:hover{
+background:#e8edf3;
 }
 
 /* EDITOR */
 
-#editor{
-width:50%;
-background:#1e1e1e;
-color:white;
+.editor{
+flex:1;
 display:flex;
 flex-direction:column;
 }
 
-#editor textarea{
-flex:1;
-background:#1e1e1e;
-color:white;
-border:none;
-padding:15px;
-font-family:monospace;
+.CodeMirror{
+height:100%;
 font-size:14px;
 }
 
-/* PDF PREVIEW */
+/* PDF PANEL */
 
-#preview{
-width:50%;
-background:#f3f4f6;
+.preview{
+width:420px;
+border-left:1px solid #ddd;
 display:flex;
 flex-direction:column;
+}
+
+.preview-header{
+background:#f1f1f1;
+padding:10px;
+font-weight:bold;
+border-bottom:1px solid #ddd;
 }
 
 iframe{
 flex:1;
 border:none;
-background:white;
+}
+
+/* LOGS */
+
+.logs{
+height:120px;
+border-top:1px solid #ddd;
+background:#fafafa;
+font-family:monospace;
+padding:10px;
+font-size:12px;
+overflow:auto;
 }
 
 </style>
@@ -92,30 +138,34 @@ background:white;
 
 <body>
 
-<div id="topbar">
+<div class="topbar">
 
-<b>LaTeX Resume Builder</b>
+<div class="title">LaTeX Resume Editor</div>
 
-<button onclick="compileLatex()">
-<i class="fa fa-play"></i> Recompile
-</button>
+<div class="actions">
 
-</div>
+<button class="compile" id="compileBtn">Recompile</button>
 
-<div id="container">
-
-<div id="filetree">
-
-<b>File tree</b>
-<hr>
-
-📄 main.tex
+<button class="download" id="downloadBtn">Download PDF</button>
 
 </div>
 
-<div id="editor">
+</div>
 
-<textarea id="latex">\documentclass{article}
+<div class="container">
+
+<div class="sidebar">
+
+<div class="file">main.tex</div>
+<div class="file">resume.tex</div>
+
+</div>
+
+<div class="editor">
+
+<textarea id="editor">
+
+\documentclass{article}
 
 \begin{document}
 
@@ -125,45 +175,116 @@ Hello Saif
 
 Sales Professional with 2+ years experience.
 
-\end{document}</textarea>
+\end{document}
+
+</textarea>
 
 </div>
 
-<div id="preview">
+<div class="preview">
+
+<div class="preview-header">
+
+PDF Preview
+
+</div>
 
 <iframe id="pdf"></iframe>
 
+<div class="logs" id="logs">
+
+Ready.
+
 </div>
 
 </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/stex/stex.min.js"></script>
 
 <script>
 
-function compileLatex(){
+const editor = CodeMirror.fromTextArea(
+
+document.getElementById("editor"),
+
+{
+
+lineNumbers:true,
+
+mode:"stex",
+
+theme:"eclipse",
+
+lineWrapping:true
+
+}
+
+)
+
+const compileBtn=document.getElementById("compileBtn")
+
+const downloadBtn=document.getElementById("downloadBtn")
+
+const pdf=document.getElementById("pdf")
+
+const logs=document.getElementById("logs")
+
+function compile(){
+
+logs.innerText="Compiling..."
 
 fetch("/compile",{
+
 method:"POST",
+
 headers:{
+
 "Content-Type":"application/x-www-form-urlencoded"
+
 },
-body:"latex="+encodeURIComponent(document.getElementById("latex").value)
+
+body:"latex="+encodeURIComponent(editor.getValue())
+
 })
+
 .then(res=>res.text())
+
 .then(data=>{
 
-if(data==="ok"){
-document.getElementById("pdf").src="/resume.pdf?"+Date.now();
+logs.innerText="Compilation successful."
+
+pdf.src="/resume.pdf?"+Date.now()
+
+})
+
+.catch(()=>{
+
+logs.innerText="Compilation error."
+
+})
+
 }
 
-});
+compileBtn.onclick=compile
 
-}
+downloadBtn.onclick=()=>{
 
-window.onload=function(){
-document.getElementById("pdf").src="/resume.pdf";
+const a=document.createElement("a")
+
+a.href="/resume.pdf?"+Date.now()
+
+a.download="resume.pdf"
+
+a.click()
+
 }
 
 </script>
 
 </body>
+
 </html>
