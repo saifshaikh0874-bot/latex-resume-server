@@ -1,72 +1,539 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<title>LaTeX Resume Builder</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overleaf — LaTeX Editor</title>
+    <!-- Font Awesome 6 (free) for all icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- CodeMirror for LaTeX editing (light theme) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css">
+    <!-- Addon for line wrapping/folding -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Lato', 'Helvetica Neue', Arial, sans-serif;
+        }
 
-<style>
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #f6f6f6;
+            color: #2c3e50;
+        }
 
-body{
-margin:0;
-font-family:Arial;
-display:flex;
-height:100vh;
-}
+        /* -------------------- TOP BAR (exact Overleaf style) -------------------- */
+        .top-bar {
+            background-color: #1e3a5f;   /* Overleaf navy */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            height: 50px;
+            flex-shrink: 0;
+            border-bottom: 1px solid #2c4c7c;
+        }
 
-#editor{
-width:50%;
-padding:20px;
-background:#1e1e1e;
-color:white;
-}
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
 
-textarea{
-width:100%;
-height:85%;
-background:#1e1e1e;
-color:white;
-border:none;
-font-family:monospace;
-font-size:14px;
-}
+        .overleaf-logo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 18px;
+            color: white;
+        }
 
-#preview{
-width:50%;
-background:#f5f5f5;
-display:flex;
-flex-direction:column;
-}
+        .overleaf-logo i {
+            font-size: 22px;
+            color: #9bb9e0;
+        }
 
-#toolbar{
-background:#2c3e50;
-color:white;
-padding:10px;
-}
+        .project-name {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #2c4c7c;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ecf0f3;
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-button{
-background:#27ae60;
-border:none;
-padding:8px 15px;
-color:white;
-cursor:pointer;
-}
+        .project-name i {
+            color: #9bb9e0;
+            font-size: 14px;
+        }
 
-iframe{
-flex:1;
-border:none;
-}
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
 
-</style>
+        .top-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #e0e9f5;
+            transition: background 0.1s;
+            white-space: nowrap;
+        }
+
+        .top-nav-item i {
+            font-size: 16px;
+        }
+
+        .top-nav-item:hover {
+            background-color: #2c4c7c;
+            color: white;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .recompile-btn {
+            background-color: #28a47e;   /* Overleaf green */
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 6px 20px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background 0.1s;
+        }
+
+        .recompile-btn:hover {
+            background-color: #1e8b6a;
+        }
+
+        .profile-icon {
+            width: 32px;
+            height: 32px;
+            background-color: #3a5f8b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: default;
+        }
+
+        /* -------------------- MAIN LAYOUT (three columns) -------------------- */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        /* ----- LEFT SIDEBAR (File tree / Outline) ----- */
+        .left-sidebar {
+            width: 260px;
+            background-color: #f8fafc;
+            border-right: 1px solid #d6dce1;
+            display: flex;
+            flex-direction: column;
+            font-size: 13px;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid #d6dce1;
+            background-color: #f1f5f9;
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            font-weight: 500;
+            color: #5f7d9e;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .sidebar-tab.active {
+            color: #1e3a5f;
+            border-bottom-color: #1e3a5f;
+            background-color: white;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .outline-message {
+            background-color: #eef2f5;
+            border-left: 3px solid #f39c12;
+            padding: 12px;
+            border-radius: 0 4px 4px 0;
+            color: #2c3e50;
+            margin-bottom: 16px;
+        }
+
+        .outline-message i {
+            color: #f39c12;
+            margin-right: 6px;
+        }
+
+        .outline-message a {
+            color: #1e3a5f;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .file-tree-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            gap: 8px;
+            color: #1e3a5f;
+        }
+
+        .file-tree-item i {
+            width: 20px;
+            color: #5f7d9e;
+        }
+
+        .file-tree-item:hover {
+            background-color: #e9eef3;
+        }
+
+        .file-tree-item.active {
+            background-color: #e3eefc;
+            font-weight: 500;
+        }
+
+        /* ----- CENTER: CODE EDITOR WITH TABS ----- */
+        .center-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-right: 1px solid #d6dce1;
+        }
+
+        .editor-tabs {
+            background-color: #f1f5f9;
+            border-bottom: 1px solid #d6dce1;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            height: 40px;
+        }
+
+        .editor-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #eef2f5;
+            border: 1px solid #d6dce1;
+            border-bottom: none;
+            padding: 6px 16px;
+            margin-right: 4px;
+            border-radius: 4px 4px 0 0;
+            font-size: 13px;
+            color: #2c3e50;
+            cursor: default;
+        }
+
+        .editor-tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            font-weight: 500;
+            color: #1e3a5f;
+        }
+
+        .editor-tab i {
+            color: #8a9bb0;
+        }
+
+        .editor-tab.active i {
+            color: #1e3a5f;
+        }
+
+        .editor-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            background: white;
+        }
+
+        .CodeMirror {
+            height: 100%;
+            font-size: 14px;
+            line-height: 1.5;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        .CodeMirror-gutters {
+            background-color: #f8fafc;
+            border-right: 1px solid #e3e8ed;
+        }
+
+        /* ----- RIGHT PANEL: PDF + LOGS ----- */
+        .right-pane {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8fafc;
+        }
+
+        .pdf-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #d6dce1;
+            font-weight: 600;
+            color: #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pdf-header i {
+            color: #e74c3c;
+        }
+
+        .pdf-viewer {
+            flex: 1;
+            background-color: #e3e8ed;
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+        }
+
+        .pdf-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background-color: #f1f5f9;
+            color: #5f7d9e;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .pdf-placeholder i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            color: #b0c4de;
+        }
+
+        .pdf-placeholder h4 {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .pdf-placeholder p {
+            font-size: 12px;
+            color: #6b7f99;
+            max-width: 280px;
+        }
+
+        .logs-panel {
+            border-top: 1px solid #d6dce1;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            max-height: 300px;
+            overflow: hidden;
+        }
+
+        .logs-header {
+            padding: 8px 16px;
+            background-color: #f1f5f9;
+            border-bottom: 1px solid #d6dce1;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .logs-badge {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: normal;
+        }
+
+        .badge.error { color: #c0392b; }
+        .badge.warning { color: #e67e22; }
+        .badge.info { color: #2980b9; }
+
+        .logs-content {
+            padding: 12px 16px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #fefefe;
+            color: #2c3e50;
+            line-height: 1.6;
+            border-bottom: 1px solid #d6dce1;
+        }
+
+        .log-line {
+            white-space: pre-wrap;
+            margin-bottom: 4px;
+        }
+
+        .log-line.error-line {
+            color: #c0392b;
+            font-weight: 500;
+        }
+
+        .raw-logs-link {
+            padding: 8px 16px;
+            color: #1e3a5f;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-top: 1px solid #e3e8ed;
+        }
+
+        .ai-suggestion {
+            background-color: #e8f0fe;
+            border-left: 4px solid #1e3a5f;
+            padding: 8px 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-suggestion i {
+            color: #1e3a5f;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+    </style>
 </head>
-
 <body>
+    <!-- TOP BAR (exact Overleaf replica) -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <div class="overleaf-logo">
+                <i class="fa-regular fa-leaf"></i>
+                <span>Overleaf</span>
+            </div>
+            <div class="project-name">
+                <i class="fa-regular fa-folder-open"></i>
+                <span>CV of mr saif alam (sales professional)</span>
+            </div>
+            <div class="top-nav">
+                <div class="top-nav-item"><i class="fa-regular fa-bars"></i> Menu</div>
+                <div class="top-nav-item"><i class="fa-regular fa-share-from-square"></i> Share</div>
+                <div class="top-nav-item"><i class="fa-regular fa-clock"></i> History</div>
+                <div class="top-nav-item" id="downloadBtn"><i class="fa-regular fa-file-arrow-down"></i> Download</div>
+                <div class="top-nav-item"><i class="fa-regular fa-paper-plane"></i> Submit</div>
+                <div class="top-nav-item"><i class="fa-regular fa-message"></i> Chat</div>
+            </div>
+        </div>
+        <div class="top-bar-right">
+            <div class="recompile-btn" id="recompileBtn">
+                <i class="fa-regular fa-rotate-right"></i> Recompile
+            </div>
+            <div class="profile-icon">S</div>
+        </div>
+    </div>
 
-<div id="editor">
+    <!-- MAIN THREE-COLUMN LAYOUT -->
+    <div class="main-layout">
+        <!-- LEFT SIDEBAR: File tree / Outline -->
+        <div class="left-sidebar">
+            <div class="sidebar-tabs">
+                <div class="sidebar-tab active" id="tabOutline">Outline</div>
+                <div class="sidebar-tab" id="tabFiles">Files</div>
+            </div>
+            <div class="sidebar-content" id="sidebarOutline">
+                <div class="outline-message">
+                    <i class="fa-regular fa-circle-exclamation"></i>
+                    We can't find any sections or subsections in this file.
+                    <a href="#">Find out more about the file outline</a>
+                </div>
+                <!-- additional outline placeholder -->
+                <div style="color:#8a9bb0; padding:8px; font-style:italic;">No headings found</div>
+            </div>
+            <div class="sidebar-content" id="sidebarFiles" style="display: none;">
+                <div class="file-tree-item active">
+                    <i class="fa-regular fa-file-lines"></i> main.tex
+                </div>
+                <div class="file-tree-item">
+                    <i class="fa-regular fa-file"></i> resume.text
+                </div>
+                <div class="file-tree-item">
+                    <i class="fa-regular fa-file"></i> bibliography.bib
+                </div>
+                <div class="file-tree-item">
+                    <i class="fa-regular fa-file"></i> lyphtonicode.sty
+                </div>
+            </div>
+        </div>
 
-<h3>LaTeX Editor</h3>
-
-<textarea id="latex">
-
+        <!-- CENTER: Code editor with tabs -->
+        <div class="center-pane">
+            <div class="editor-tabs">
+                <div class="editor-tab active">
+                    <i class="fa-regular fa-file-lines"></i> main.tex
+                </div>
+                <div class="editor-tab">
+                    <i class="fa-regular fa-file"></i> resume.text
+                </div>
+            </div>
+            <div class="editor-container">
+                <textarea id="latex-editor">
 \documentclass{article}
 \begin{document}
 
@@ -77,45 +544,197 @@ Hello Saif
 Sales Professional with 2+ years experience.
 
 \end{document}
+                </textarea>
+            </div>
+        </div>
 
-</textarea>
+        <!-- RIGHT PANEL: PDF preview + logs -->
+        <div class="right-pane">
+            <div class="pdf-header">
+                <i class="fa-regular fa-file-pdf"></i> PDF
+            </div>
+            <div class="pdf-viewer" id="pdfViewer">
+                <div class="pdf-placeholder" id="pdfPlaceholder" style="display: flex;">
+                    <i class="fa-regular fa-file-pdf"></i>
+                    <h4>No PDF</h4>
+                    <p>This compile didn't produce a PDF. This can happen if:
+                        <br>- There is an unrecoverable LaTeX error.
+                        <br>- The document environment contains no content.
+                        <br>- This project contains a file called output.pdf.
+                    </p>
+                </div>
+                <iframe id="pdfFrame" style="display: none;"></iframe>
+            </div>
+            <div class="logs-panel">
+                <div class="logs-header">
+                    <span><i class="fa-regular fa-terminal"></i> All logs</span>
+                    <div class="logs-badge">
+                        <span class="badge error"><i class="fa-regular fa-circle-exclamation"></i> 1 Error</span>
+                        <span class="badge warning"><i class="fa-regular fa-triangle-exclamation"></i> 1 Warning</span>
+                        <span class="badge info"><i class="fa-regular fa-circle-info"></i> 0 Info</span>
+                    </div>
+                </div>
+                <div class="logs-content">
+                    <div class="log-line error-line"><i class="fa-regular fa-circle-exclamation" style="color:#c0392b; width:16px;"></i> Emergency stop</div>
+                    <div class="log-line">./main.tex</div>
+                    <div class="log-line error-line">*** (job aborted, no legal \end found)</div>
+                    <div class="log-line">Here is how much of TeX's memory you used:</div>
+                    <div class="log-line">15 strings out of 467886</div>
+                    <div class="log-line">340 string characters out of 5434</div>
+                    <div class="log-line">425018 words of memory out of 50000000</div>
+                </div>
+                <div class="raw-logs-link">
+                    <i class="fa-regular fa-code"></i> Raw logs
+                </div>
+                <div class="ai-suggestion">
+                    <i class="fa-regular fa-lightbulb"></i>
+                    <span><strong>1 free suggestion</strong> Add AI Assist</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-</div>
+    <!-- CodeMirror and addons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/stex/stex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/brace-fold.min.js"></script>
 
-<div id="preview">
+    <script>
+        (function() {
+            // Initialize CodeMirror
+            const textarea = document.getElementById('latex-editor');
+            const editor = CodeMirror.fromTextArea(textarea, {
+                lineNumbers: true,
+                mode: 'stex',
+                theme: 'eclipse',
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                indentUnit: 2,
+                tabSize: 2,
+                lineWrapping: true,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+            });
 
-<div id="toolbar">
+            // DOM elements
+            const recompileBtn = document.getElementById('recompileBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const pdfFrame = document.getElementById('pdfFrame');
+            const pdfPlaceholder = document.getElementById('pdfPlaceholder');
+            const tabOutline = document.getElementById('tabOutline');
+            const tabFiles = document.getElementById('tabFiles');
+            const sidebarOutline = document.getElementById('sidebarOutline');
+            const sidebarFiles = document.getElementById('sidebarFiles');
+            const fileItems = document.querySelectorAll('.file-tree-item');
+            const editorTabs = document.querySelectorAll('.editor-tab');
 
-<button onclick="compileLatex()">Recompile</button>
+            // Tab switching in left sidebar
+            tabOutline.addEventListener('click', () => {
+                tabOutline.classList.add('active');
+                tabFiles.classList.remove('active');
+                sidebarOutline.style.display = 'block';
+                sidebarFiles.style.display = 'none';
+            });
+            tabFiles.addEventListener('click', () => {
+                tabFiles.classList.add('active');
+                tabOutline.classList.remove('active');
+                sidebarFiles.style.display = 'block';
+                sidebarOutline.style.display = 'none';
+            });
 
-</div>
+            // Simulate file switching (update editor content)
+            fileItems.forEach((item, index) => {
+                item.addEventListener('click', function() {
+                    fileItems.forEach(f => f.classList.remove('active'));
+                    this.classList.add('active');
+                    const fileName = this.innerText.trim();
+                    // Update active tab (simplistic)
+                    if (fileName.includes('main.tex')) {
+                        editorTabs[0].classList.add('active');
+                        editorTabs[1].classList.remove('active');
+                        editor.setValue(`\\documentclass{article}\n\\begin{document}\n\nHello Saif\n\n\\section*{Experience}\n\nSales Professional with 2+ years experience.\n\n\\end{document}`);
+                    } else {
+                        editorTabs[1].classList.add('active');
+                        editorTabs[0].classList.remove('active');
+                        editor.setValue(`This is a placeholder for ${fileName}.\nIn a real backend, you would load the actual content.`);
+                    }
+                });
+            });
 
-<iframe id="pdf"></iframe>
+            // Compile function (matches your backend)
+            function compileLatex() {
+                const latexCode = editor.getValue();
+                // Show compiling status (optional)
+                document.querySelector('.logs-header .badge.error').innerHTML = '<i class="fa-regular fa-spinner fa-spin"></i> compiling...';
 
-</div>
+                fetch('/compile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'latex=' + encodeURIComponent(latexCode)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Compile failed');
+                    return res.text();
+                })
+                .then(() => {
+                    // Show PDF iframe and hide placeholder
+                    pdfFrame.src = '/resume.pdf?' + Date.now();
+                    pdfFrame.style.display = 'block';
+                    pdfPlaceholder.style.display = 'none';
+                    // Update logs to show success (mock)
+                    document.querySelector('.logs-content').innerHTML = '<div class="log-line">No errors, PDF generated.</div>';
+                    document.querySelector('.logs-header .badge.error').innerHTML = '<i class="fa-regular fa-circle-check"></i> 0 Errors';
+                })
+                .catch(err => {
+                    console.error(err);
+                    // If error, keep placeholder and show error logs (as in screenshot)
+                    pdfFrame.style.display = 'none';
+                    pdfPlaceholder.style.display = 'flex';
+                    // Restore error logs
+                    document.querySelector('.logs-content').innerHTML = `
+                        <div class="log-line error-line"><i class="fa-regular fa-circle-exclamation" style="color:#c0392b;"></i> Emergency stop</div>
+                        <div class="log-line">./main.tex</div>
+                        <div class="log-line error-line">*** (job aborted, no legal \\end found)</div>
+                        <div class="log-line">Here is how much of TeX's memory you used:</div>
+                        <div class="log-line">15 strings out of 467886</div>
+                        <div class="log-line">340 string characters out of 5434</div>
+                        <div class="log-line">425018 words of memory out of 50000000</div>
+                    `;
+                    document.querySelector('.logs-header .badge.error').innerHTML = '<i class="fa-regular fa-circle-exclamation"></i> 1 Error';
+                });
+            }
 
-<script>
+            // Event listeners
+            recompileBtn.addEventListener('click', compileLatex);
+            editor.setOption('extraKeys', {
+                'Ctrl-S': compileLatex,
+                'Cmd-S': compileLatex
+            });
 
-function compileLatex(){
+            // Download button
+            downloadBtn.addEventListener('click', () => {
+                window.location.href = '/resume.pdf?' + Date.now();
+            });
 
-fetch("/compile",{
-method:"POST",
-headers:{
-"Content-Type":"application/x-www-form-urlencoded"
-},
-body:"latex="+encodeURIComponent(document.getElementById("latex").value)
-})
-.then(res=>res.text())
-.then(data=>{
-
-document.getElementById("pdf").src="/resume.pdf?"+Date.now()
-
-})
-
-}
-
-</script>
-
+            // Initial load: try to fetch existing PDF
+            setTimeout(() => {
+                fetch('/resume.pdf?' + Date.now(), { method: 'HEAD' })
+                    .then(res => {
+                        if (res.ok) {
+                            pdfFrame.src = '/resume.pdf?' + Date.now();
+                            pdfFrame.style.display = 'block';
+                            pdfPlaceholder.style.display = 'none';
+                        }
+                    })
+                    .catch(() => {});
+            }, 500);
+        })();
+    </script>
 </body>
-
 </html>
