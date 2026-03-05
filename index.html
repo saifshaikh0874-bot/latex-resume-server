@@ -2,64 +2,82 @@
 <html>
 
 <head>
-<title>Latex Resume Builder</title>
+<title>LaTeX Resume Builder</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
 
 body{
 margin:0;
 font-family:Arial;
-display:flex;
 height:100vh;
-overflow:hidden;
-}
-
-#editor{
-width:50%;
-padding:20px;
-background:#1e1e1e;
-color:white;
 display:flex;
 flex-direction:column;
 }
 
-textarea{
-flex:1;
-width:100%;
-background:#1e1e1e;
-color:white;
-border:none;
-font-family:monospace;
-font-size:14px;
-outline:none;
-}
+/* TOP BAR */
 
-#preview{
-width:50%;
-background:#f5f5f5;
-display:flex;
-flex-direction:column;
-}
-
-#toolbar{
-background:#2c3e50;
+#topbar{
+background:#1f2937;
 color:white;
 padding:10px;
 display:flex;
 align-items:center;
+gap:20px;
 }
 
-button{
-background:#27ae60;
+#topbar button{
+background:#22c55e;
 border:none;
 padding:8px 15px;
 color:white;
 cursor:pointer;
-font-weight:bold;
 }
 
-button:hover{
-background:#219150;
+/* MAIN LAYOUT */
+
+#container{
+flex:1;
+display:flex;
+}
+
+/* FILE TREE */
+
+#filetree{
+width:200px;
+background:#111827;
+color:white;
+padding:10px;
+}
+
+/* EDITOR */
+
+#editor{
+width:50%;
+background:#1e1e1e;
+color:white;
+display:flex;
+flex-direction:column;
+}
+
+#editor textarea{
+flex:1;
+background:#1e1e1e;
+color:white;
+border:none;
+padding:15px;
+font-family:monospace;
+font-size:14px;
+}
+
+/* PDF PREVIEW */
+
+#preview{
+width:50%;
+background:#f3f4f6;
+display:flex;
+flex-direction:column;
 }
 
 iframe{
@@ -69,13 +87,33 @@ background:white;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<div id="editor">
+<div id="topbar">
 
-<h3>LaTeX Editor</h3>
+<b>LaTeX Resume Builder</b>
+
+<button onclick="compileLatex()">
+<i class="fa fa-play"></i> Recompile
+</button>
+
+</div>
+
+<div id="container">
+
+<div id="filetree">
+
+<b>File tree</b>
+<hr>
+
+📄 main.tex
+
+</div>
+
+<div id="editor">
 
 <textarea id="latex">\documentclass{article}
 
@@ -87,20 +125,15 @@ Hello Saif
 
 Sales Professional with 2+ years experience.
 
-\end{document}
-</textarea>
+\end{document}</textarea>
 
 </div>
 
 <div id="preview">
 
-<div id="toolbar">
-
-<button onclick="compileLatex()">Recompile</button>
+<iframe id="pdf"></iframe>
 
 </div>
-
-<iframe id="pdf"></iframe>
 
 </div>
 
@@ -108,38 +141,29 @@ Sales Professional with 2+ years experience.
 
 function compileLatex(){
 
-const latexCode = document.getElementById("latex").value;
-
 fetch("/compile",{
 method:"POST",
 headers:{
 "Content-Type":"application/x-www-form-urlencoded"
 },
-body:"latex="+encodeURIComponent(latexCode)
+body:"latex="+encodeURIComponent(document.getElementById("latex").value)
 })
 .then(res=>res.text())
 .then(data=>{
 
-if(data === "ok"){
+if(data==="ok"){
 document.getElementById("pdf").src="/resume.pdf?"+Date.now();
-}else{
-alert("Compilation Error. Check LaTeX code.");
 }
 
-})
-.catch(err=>{
-alert("Server error");
 });
 
 }
 
-// load PDF when page opens
-window.onload = function(){
+window.onload=function(){
 document.getElementById("pdf").src="/resume.pdf";
 }
 
 </script>
 
 </body>
-
 </html>
