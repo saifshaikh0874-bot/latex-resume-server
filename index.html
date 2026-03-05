@@ -1,13 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>LaTeX Resume Builder</title>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css">
+<title>Latex Resume Builder</title>
 
 <style>
 
@@ -15,82 +10,62 @@ body{
 margin:0;
 font-family:Arial;
 display:flex;
-flex-direction:column;
 height:100vh;
-}
-
-.topbar{
-background:#1e3a5f;
-color:white;
-padding:10px 20px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-
-.compile{
-background:#28a47e;
-border:none;
-padding:8px 18px;
-color:white;
-font-weight:bold;
-border-radius:20px;
-cursor:pointer;
-}
-
-.main{
-display:flex;
-flex:1;
 overflow:hidden;
 }
 
-.editor{
+#editor{
 width:50%;
-border-right:1px solid #ddd;
-display:flex;
-flex-direction:column;
-}
-
-.preview{
-width:50%;
-display:flex;
-flex-direction:column;
-}
-
-.CodeMirror{
-height:100%;
-font-size:14px;
-}
-
-.toolbar{
-background:#f1f1f1;
-padding:10px;
-border-bottom:1px solid #ddd;
-}
-
-.download{
-background:#3498db;
-border:none;
-padding:6px 14px;
+padding:20px;
+background:#1e1e1e;
 color:white;
-border-radius:4px;
+display:flex;
+flex-direction:column;
+}
+
+textarea{
+flex:1;
+width:100%;
+background:#1e1e1e;
+color:white;
+border:none;
+font-family:monospace;
+font-size:14px;
+outline:none;
+}
+
+#preview{
+width:50%;
+background:#f5f5f5;
+display:flex;
+flex-direction:column;
+}
+
+#toolbar{
+background:#2c3e50;
+color:white;
+padding:10px;
+display:flex;
+align-items:center;
+}
+
+button{
+background:#27ae60;
+border:none;
+padding:8px 15px;
+color:white;
 cursor:pointer;
-margin-left:10px;
+font-weight:bold;
+}
+
+button:hover{
+background:#219150;
 }
 
 iframe{
 flex:1;
 border:none;
-}
-
-.logs{
-height:120px;
-background:#fafafa;
-border-top:1px solid #ddd;
-font-family:monospace;
-padding:10px;
-overflow:auto;
-font-size:12px;
+background:white;
 }
 
 </style>
@@ -98,26 +73,12 @@ font-size:12px;
 
 <body>
 
-<div class="topbar">
+<div id="editor">
 
-<div>
-<b>LaTeX Resume Builder</b>
-</div>
+<h3>LaTeX Editor</h3>
 
-<div>
-<button class="compile" id="compileBtn">Recompile</button>
-<button class="download" id="downloadBtn">Download PDF</button>
-</div>
+<textarea id="latex">\documentclass{article}
 
-</div>
-
-<div class="main">
-
-<div class="editor">
-
-<textarea id="latex-editor">
-
-\documentclass{article}
 \begin{document}
 
 Hello Saif
@@ -127,88 +88,58 @@ Hello Saif
 Sales Professional with 2+ years experience.
 
 \end{document}
-
 </textarea>
 
 </div>
 
-<div class="preview">
+<div id="preview">
 
-<div class="toolbar">
-PDF Preview
+<div id="toolbar">
+
+<button onclick="compileLatex()">Recompile</button>
+
 </div>
 
 <iframe id="pdf"></iframe>
 
-<div class="logs" id="logs">
-Ready.
 </div>
-
-</div>
-
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/stex/stex.min.js"></script>
 
 <script>
 
-const editor = CodeMirror.fromTextArea(
-document.getElementById("latex-editor"),
-{
-lineNumbers:true,
-mode:"stex",
-theme:"eclipse",
-lineWrapping:true
-}
-)
-
-const compileBtn = document.getElementById("compileBtn")
-const downloadBtn = document.getElementById("downloadBtn")
-const pdfFrame = document.getElementById("pdf")
-const logs = document.getElementById("logs")
-
 function compileLatex(){
 
-logs.innerText = "Compiling..."
+const latexCode = document.getElementById("latex").value;
 
 fetch("/compile",{
 method:"POST",
 headers:{
 "Content-Type":"application/x-www-form-urlencoded"
 },
-body:"latex="+encodeURIComponent(editor.getValue())
+body:"latex="+encodeURIComponent(latexCode)
 })
 .then(res=>res.text())
 .then(data=>{
 
-logs.innerText = "Compile successful."
-
-pdfFrame.src="/resume.pdf?"+Date.now()
+if(data === "ok"){
+document.getElementById("pdf").src="/resume.pdf?"+Date.now();
+}else{
+alert("Compilation Error. Check LaTeX code.");
+}
 
 })
 .catch(err=>{
-
-logs.innerText="Compile error."
-
-})
+alert("Server error");
+});
 
 }
 
-compileBtn.onclick=compileLatex
-
-downloadBtn.onclick=()=>{
-
-const a=document.createElement("a")
-a.href="/resume.pdf?"+Date.now()
-a.download="resume.pdf"
-document.body.appendChild(a)
-a.click()
-document.body.removeChild(a)
-
+// load PDF when page opens
+window.onload = function(){
+document.getElementById("pdf").src="/resume.pdf";
 }
 
 </script>
 
 </body>
+
 </html>
